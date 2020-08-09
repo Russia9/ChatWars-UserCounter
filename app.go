@@ -125,4 +125,6 @@ func AddUser(source string, id string, castle string, name string, tag string, l
 		timestamp := time.Now().Unix()
 		_, _ = database.Query("INSERT INTO chatwars.users (id, castle, name, discovered, source) VALUES (?,?,?,?,?)", id, castle, name, timestamp, source)
 	}
+
+	database.Close()
 }
