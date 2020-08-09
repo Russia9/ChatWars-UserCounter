@@ -47,23 +47,6 @@ func main() {
 		logger.SetLevel(logrus.InfoLevel)
 	}
 
-	DBHost := lib.GetEnv("CWUC_DB_HOST", "localhost")
-	DBPort := lib.GetEnv("CWUC_DB_PORT", "3306")
-	DBUser := lib.GetEnv("CWUC_DB_USER", "root")
-	DBPass := lib.GetEnv("CWUC_DB_PASS", "")
-	DBName := lib.GetEnv("CWUC_DB_NAME", "chatwars")
-	database, err := sql.Open("mysql", fmt.Sprintf("%s:%s@(%s:%s)/%s?parseTime=1&charset=utf8mb4&collation=utf8mb4_unicode_ci", DBUser, DBPass, DBHost, DBPort, DBName)) // ?parseTime=true
-
-	if err != nil {
-		logger.Panic("Error creating database: ", err)
-		os.Exit(1)
-	}
-	err = database.Ping()
-	if err != nil {
-		logger.Panic("Error connecting to the database: ", err)
-		os.Exit(1)
-	}
-
 	// Kafka consumer init
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": lib.GetEnv("CWUC_KAFKA_ADDRESS", "localhost"),
@@ -86,22 +69,22 @@ func main() {
 				var message messages.OfferMessage
 				err = json.Unmarshal(msg.Value, &message)
 				if err == nil {
-					AddUser("offers", message.SellerID, message.SellerCastle, message.SellerName, "", 0, logger, database)
+					AddUser("offers", message.SellerID, message.SellerCastle, message.SellerName, "", 0, logger)
 				}
 			case "cw3-duels":
 				var message messages.DuelMessage
 				err = json.Unmarshal(msg.Value, &message)
 				if err == nil {
-					AddUser("duels", message.Winner.ID, message.Winner.Castle, message.Winner.Name, message.Winner.Tag, message.Winner.Level, logger, database)
-					AddUser("duels", message.Loser.ID, message.Loser.Castle, message.Loser.Name, message.Loser.Tag, message.Loser.Level, logger, database)
+					AddUser("duels", message.Winner.ID, message.Winner.Castle, message.Winner.Name, message.Winner.Tag, message.Winner.Level, logger)
+					AddUser("duels", message.Loser.ID, message.Loser.Castle, message.Loser.Name, message.Loser.Tag, message.Loser.Level, logger)
 				} else {
 					logger.Trace(err)
 				}
 			case "cw3-deals":
 				var message messages.DealMessage
 				err = json.Unmarshal([]byte(msg.Value), &message)
-				AddUser("deals", message.SellerID, message.SellerCastle, message.SellerName, "", 0, logger, database)
-				AddUser("deals", message.BuyerID, message.BuyerCastle, message.BuyerName, "", 0, logger, database)
+				AddUser("deals", message.SellerID, message.SellerCastle, message.SellerName, "", 0, logger)
+				AddUser("deals", message.BuyerID, message.BuyerCastle, message.BuyerName, "", 0, logger)
 			}
 		} else {
 			logger.Error(fmt.Sprintf("Consumer error: %v (%v)\n", err, msg))
@@ -109,7 +92,24 @@ func main() {
 	}
 }
 
-func AddUser(source string, id string, castle string, name string, tag string, level int, logger *logrus.Logger, database *sql.DB) {
+func AddUser(source string, id string, castle string, name string, tag string, level int, logger *logrus.Logger) {
+	DBHost := lib.GetEnv("CWUC_DB_HOST", "localhost")
+	DBPort := lib.GetEnv("CWUC_DB_PORT", "3306")
+	DBUser := lib.GetEnv("CWUC_DB_USER", "root")
+	DBPass := lib.GetEnv("CWUC_DB_PASS", "")
+	DBName := lib.GetEnv("CWUC_DB_NAME", "chatwars")
+	database, err := sql.Open("mysql", fmt.Sprintf("%s:%s@(%s:%s)/%s?parseTime=1&charset=utf8mb4&collation=utf8mb4_unicode_ci", DBUser, DBPass, DBHost, DBPort, DBName)) // ?parseTime=true
+
+	if err != nil {
+		logger.Panic("Error creating database: ", err)
+		os.Exit(1)
+	}
+	err = database.Ping()
+	if err != nil {
+		logger.Panic("Error connecting to the database: ", err)
+		os.Exit(1)
+	}
+
 	if source == "duels" {
 		timestamp := time.Now().Unix()
 		_, err := database.Query("DELETE FROM chatwars.users WHERE id='" + id + "'")
