@@ -46,7 +46,7 @@ func main() {
 	default:
 		logger.SetLevel(logrus.InfoLevel)
 	}
-	chatWarsInstance := lib.GetEnv("CWUC_INSTANCE", "cw3")
+	chatWarsInstance := lib.GetEnv("CWUC_INSTANCE", "cw3-stats")
 
 	// Kafka consumer init
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
