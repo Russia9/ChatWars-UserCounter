@@ -46,7 +46,6 @@ func main() {
 	default:
 		logger.SetLevel(logrus.InfoLevel)
 	}
-
 	chatWarsInstance := lib.GetEnv("CWUC_INSTANCE", "cw3")
 
 	// Kafka consumer init
@@ -101,7 +100,7 @@ func AddUser(source string, id string, castle string, name string, tag string, l
 	DBPass := lib.GetEnv("CWUC_DB_PASS", "")
 	DBName := lib.GetEnv("CWUC_DB_NAME", "cw3")
 	database, err := sql.Open("mysql", fmt.Sprintf("%s:%s@(%s:%s)/%s?parseTime=1&charset=utf8mb4&collation=utf8mb4_unicode_ci", DBUser, DBPass, DBHost, DBPort, DBName)) // ?parseTime=true
-
+	defer database.Close()
 	if err != nil {
 		logger.Panic("Error creating database: ", err)
 		os.Exit(1)
@@ -114,19 +113,13 @@ func AddUser(source string, id string, castle string, name string, tag string, l
 
 	if source == "duels" {
 		timestamp := time.Now().Unix()
-		_, err := database.Query("DELETE FROM users WHERE id='" + id + "'")
+		_, err := database.Exec("DELETE FROM users WHERE id='" + id + "'")
 		if err != nil {
 			logger.Debug(err)
 		}
-		_, err = database.Query("INSERT INTO users (id, castle, name, discovered, tag, source, level) VALUES (?,?,?,?,?,?,?)", id, castle, name, timestamp, tag, source,
-			level)
-		if err != nil {
-			logger.Debug(err)
-		}
+		_, _ = database.Exec("INSERT INTO users (id, castle, name, discovered, tag, source, level) VALUES (?,?,?,?,?,?,?)", id, castle, name, timestamp, tag, source, level)
 	} else {
 		timestamp := time.Now().Unix()
-		_, _ = database.Query("INSERT INTO users (id, castle, name, discovered, source) VALUES (?,?,?,?,?)", id, castle, name, timestamp, source)
+		_, _ = database.Exec("INSERT INTO users (id, castle, name, discovered, source) VALUES (?,?,?,?,?)", id, castle, name, timestamp, source)
 	}
-
-	database.Close()
 }
