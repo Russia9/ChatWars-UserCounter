@@ -13,5 +13,5 @@ type ArenaGamer struct {
 	Tag    string `json:"tag"`
 	Castle string `json:"castle"`
 	Level  int    `json:"level"`
-	hp     int    `json:"hp"`
+	HP     int    `json:"hp"`
 }
