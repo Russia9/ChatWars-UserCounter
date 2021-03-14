@@ -1,5 +1,5 @@
-# ChatWars Broker
-Собирает информацию о предложениях на бирже и помогает покупать
+# ChatWars UserCounter
+Собирает статистику игроков ChatWars
 
 ## Used libraries
 -  [`telebot`](https://github.com/tucnak/telebot) - Bot framework

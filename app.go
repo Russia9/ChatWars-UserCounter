@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"os"
 	"time"
@@ -46,12 +47,12 @@ func main() {
 	default:
 		logger.SetLevel(logrus.InfoLevel)
 	}
-	chatWarsInstance := lib.GetEnv("CWUC_INSTANCE", "cw3-stats")
+	chatWarsInstance := lib.GetEnv("CWUC_INSTANCE", "cw3")
 
 	// Kafka consumer init
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": lib.GetEnv("CWUC_KAFKA_ADDRESS", "localhost"),
-		"group.id":          chatWarsInstance,
+		"group.id":          chatWarsInstance + "-" + uuid.New().String(),
 		"auto.offset.reset": "latest",
 	})
 
